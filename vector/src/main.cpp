@@ -1,4 +1,5 @@
 #include <print>
+#include <cmath>
 #include <cstddef>
 #include <cstring>
 #include <stdexcept>
@@ -82,18 +83,36 @@ class Vector {
     }
 
     std::optional<size_t> binary_search(const Type &t) const {
-        int min = 0;
-        int max = len;
-        while (true) {
-            int i = (max - min) / 2 + min;
+        size_t min = 0;
+        size_t max = len - 1;
+        while (min <= max) {
+            int i = std::floor((min + max) / 2);
             if (t == ptr[i]) {
                 return i;
+            } else if (t > ptr[i]) {
+                min = i + 1;
             } else if (t < ptr[i]) {
-                max = i;
-            } else {
-                min = i;
+                max = i - 1;
             }
         }
+
+        return std::nullopt;
+    }
+
+    Type *begin() {
+        return ptr;
+    }
+
+    Type *end() {
+        return ptr + len;
+    }
+
+    const Type *cbegin() const {
+        return ptr;
+    }
+
+    const Type *cend() const {
+        return ptr + len;
     }
 
     size_t size() const {
@@ -106,27 +125,51 @@ class Vector {
         }
         return ptr[idx];
     }
+
+    Type &operator[](std::size_t idx) const {
+        if (idx >= len) {
+            throw std::out_of_range("idx is more than length");
+        }
+        return ptr[idx];
+    }
+};
+
+template <typename Type>
+struct std::formatter<Vector<Type>> : std::formatter<Type> {
+    constexpr auto parse(std::format_parse_context& ctx) {
+        auto it = ctx.begin();
+        if (it != ctx.end() && *it != '}') {
+            throw std::format_error("invalid format for Vector");
+        }
+        return it;
+    }
+
+    auto format(const Vector<Type>& vec, std::format_context& ctx) const {
+        auto out = ctx.out();
+        out = std::format_to(out, "[");
+        for (std::size_t i = 0; i < vec.size(); i++)
+        {
+            ctx.advance_to(out);
+            out = std::formatter<Type>::format(vec[i], ctx);
+            if (i != vec.size() - 1)
+            {
+                ctx.advance_to(out);
+                out = std::format_to(out, ", ");
+            }
+        }
+        return std::format_to(out, "]");
+    }
 };
 
 int main() {
     Vector<int> vec(5);
 
     vec.push(5);
-    vec.push(5);
-    vec.push(5);
-    vec.resize(10);
-    vec.insert(3, 9);
+    vec.push(10);
+    vec.push(9);
 
+    std::sort(vec.begin(), vec.end(), std::less());
 
-    std::println("{}", vec.binary_search(9).value());
-    auto size = vec.size();
-    for (size_t i = 0; i < size; i++) {
-        std::println("1 {}", vec[i]);
-    }
-    std::println("2 {}", vec.remove(2));
-
-    auto s = vec.size();
-    for (size_t i = 0; i < s; i++) {
-        std::println("3 {}", vec[i]);
-    }
+    std::println("{}", vec);
+    std::println("{}", vec.binary_search(5).value());
 }
