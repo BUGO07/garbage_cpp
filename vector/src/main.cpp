@@ -63,7 +63,37 @@ class Vector {
         std::memmove(ptr + pos, ptr + pos + 1, (len - pos) * sizeof(Type));
         len--;
         return copy;
+    }
+    
+    std::optional<size_t> find(Type t1) const {
+        return find([&](Type t2) -> bool {
+            return t1 == t2;
+        });
+    }
 
+    std::optional<size_t> find(const auto &check) const {
+        for (size_t i = 0; i < len; i++) {
+            if (check(ptr[i])) {
+                return i;
+            }
+        }
+
+        return std::nullopt;
+    }
+
+    std::optional<size_t> binary_search(const Type &t) const {
+        int min = 0;
+        int max = len;
+        while (true) {
+            int i = (max - min) / 2 + min;
+            if (t == ptr[i]) {
+                return i;
+            } else if (t < ptr[i]) {
+                max = i;
+            } else {
+                min = i;
+            }
+        }
     }
 
     size_t size() const {
@@ -85,8 +115,10 @@ int main() {
     vec.push(5);
     vec.push(5);
     vec.resize(10);
-    vec.insert(2, 9);
+    vec.insert(3, 9);
 
+
+    std::println("{}", vec.binary_search(9).value());
     auto size = vec.size();
     for (size_t i = 0; i < size; i++) {
         std::println("1 {}", vec[i]);
