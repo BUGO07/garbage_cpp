@@ -4,23 +4,23 @@
 #include <cstring>
 #include <stdexcept>
 
-template <typename Type>
+template <typename T>
 class Vector {
-    private:
-    std::size_t capacity;
-    std::size_t len;
-    Type *ptr;
+private:
+    size_t capacity;
+    size_t len;
+    T *ptr;
 
-    public:
+public:
     Vector(size_t cap): capacity { std::max(capacity, 1uz) } , len { 0 } {
-        ptr = new Type[cap];
+        ptr = new T[cap];
     }
 
-    void push(Type t) {
+    void push(T t) {
         insert(len, t);
     }
 
-    Type pop() {
+    T pop() {
         return remove(len - 1);
     }
 
@@ -33,13 +33,13 @@ class Vector {
         if (size < old_len) {
             len = size;
         }
-        auto new_ptr = new Type[capacity];
-        std::memcpy((void *)new_ptr, ptr, std::min(len, old_len) * sizeof(Type));
+        auto new_ptr = new T[capacity];
+        std::memcpy((void *)new_ptr, ptr, std::min(len, old_len) * sizeof(T));
         delete[] ptr;
         ptr = new_ptr;
     }
 
-    void insert(size_t pos, Type t) {
+    void insert(size_t pos, T t) {
         if (pos > len) {
             throw std::out_of_range("idx is more than length");
         }
@@ -48,26 +48,26 @@ class Vector {
             resize(len * 2);
         }
 
-        std::memmove(ptr + pos + 1, ptr + pos, (len - pos) * sizeof(Type));
+        std::memmove(ptr + pos + 1, ptr + pos, (len - pos) * sizeof(T));
         len++;
 
         ptr[pos] = t;
     }
 
-    Type remove(size_t pos) {
+    T remove(size_t pos) {
         if (pos >= len) {
             throw std::out_of_range("idx is more than length");
         }
 
         auto copy = std::move(ptr[pos]);
-        ptr[len].~Type();
-        std::memmove(ptr + pos, ptr + pos + 1, (len - pos) * sizeof(Type));
+        ptr[len].~T();
+        std::memmove(ptr + pos, ptr + pos + 1, (len - pos) * sizeof(T));
         len--;
         return copy;
     }
     
-    std::optional<size_t> find(Type t1) const {
-        return find([&](Type t2) -> bool {
+    std::optional<size_t> find(T t1) const {
+        return find([&](T t2) -> bool {
             return t1 == t2;
         });
     }
@@ -82,7 +82,7 @@ class Vector {
         return std::nullopt;
     }
 
-    std::optional<size_t> binary_search(const Type &t) const {
+    std::optional<size_t> binary_search(const T &t) const {
         size_t min = 0;
         size_t max = len - 1;
         while (min <= max) {
@@ -99,19 +99,19 @@ class Vector {
         return std::nullopt;
     }
 
-    Type *begin() {
+    T *begin() {
         return ptr;
     }
 
-    Type *end() {
+    T *end() {
         return ptr + len;
     }
 
-    const Type *cbegin() const {
+    const T *cbegin() const {
         return ptr;
     }
 
-    const Type *cend() const {
+    const T *cend() const {
         return ptr + len;
     }
 
@@ -119,14 +119,14 @@ class Vector {
         return len;
     }
 
-    Type &operator[](std::size_t idx) {
+    T &operator[](size_t idx) {
         if (idx >= len) {
             throw std::out_of_range("idx is more than length");
         }
         return ptr[idx];
     }
 
-    Type &operator[](std::size_t idx) const {
+    T &operator[](size_t idx) const {
         if (idx >= len) {
             throw std::out_of_range("idx is more than length");
         }
@@ -134,8 +134,8 @@ class Vector {
     }
 };
 
-template <typename Type>
-struct std::formatter<Vector<Type>> : std::formatter<Type> {
+template <typename T>
+struct std::formatter<Vector<T>> : std::formatter<T> {
     constexpr auto parse(std::format_parse_context& ctx) {
         auto it = ctx.begin();
         if (it != ctx.end() && *it != '}') {
@@ -144,13 +144,13 @@ struct std::formatter<Vector<Type>> : std::formatter<Type> {
         return it;
     }
 
-    auto format(const Vector<Type>& vec, std::format_context& ctx) const {
+    auto format(const Vector<T>& vec, std::format_context& ctx) const {
         auto out = ctx.out();
         out = std::format_to(out, "[");
-        for (std::size_t i = 0; i < vec.size(); i++)
+        for (size_t i = 0; i < vec.size(); i++)
         {
             ctx.advance_to(out);
-            out = std::formatter<Type>::format(vec[i], ctx);
+            out = std::formatter<T>::format(vec[i], ctx);
             if (i != vec.size() - 1)
             {
                 ctx.advance_to(out);
